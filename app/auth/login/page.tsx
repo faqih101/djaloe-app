@@ -1,22 +1,35 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const params = useSearchParams();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(params.get('error') === 'unauthorized' ? 'Akses ditolak. Hanya admin yang dapat mengakses halaman tersebut.' : '');
+  const [error, setError] = useState(
+    params.get('error') === 'unauthorized'
+      ? 'Akses ditolak. Hanya admin yang dapat mengakses halaman tersebut.'
+      : ''
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setError('');
-    const res = await signIn('credentials', { email, password, redirect: false });
+    setLoading(true);
+    setError('');
+
+    const res = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    });
+
     setLoading(false);
+
     if (res?.ok) {
       router.push(params.get('callbackUrl') || '/');
       router.refresh();
@@ -33,26 +46,65 @@ export default function LoginPage() {
         <h2 className="auth-title">Selamat Datang</h2>
         <p className="auth-sub">Masuk ke akunmu</p>
 
-        {error && <div className="auth-err" style={{ marginBottom: '1.25rem' }}>{error}</div>}
+        {error && (
+          <div className="auth-err" style={{ marginBottom: '1.25rem' }}>
+            {error}
+          </div>
+        )}
 
         <form className="form-g" onSubmit={handleSubmit}>
           <div>
             <label className="form-lbl">Email</label>
-            <input className="form-inp" type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" placeholder="kamu@email.com" />
+            <input
+              className="form-inp"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              placeholder="kamu@email.com"
+            />
           </div>
           <div>
             <label className="form-lbl">Password</label>
-            <input className="form-inp" type="password" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" placeholder="••••••••" />
+            <input
+              className="form-inp"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              placeholder="••••••••"
+            />
           </div>
           <div style={{ textAlign: 'right', marginTop: '-.5rem' }}>
-            <Link href="/auth/forgot-password" className="auth-link" style={{ fontSize: '.75rem' }}>Lupa password?</Link>
+            <Link
+              href="/auth/forgot-password"
+              className="auth-link"
+              style={{ fontSize: '.75rem' }}
+            >
+              Lupa password?
+            </Link>
           </div>
-          <button className="auth-btn" type="submit" disabled={loading}>{loading ? 'Masuk...' : 'Masuk →'}</button>
+          <button className="auth-btn" type="submit" disabled={loading}>
+            {loading ? 'Masuk...' : 'Masuk →'}
+          </button>
         </form>
 
-        <div className="auth-divider"><div className="auth-div-line" /><span className="auth-div-txt">atau</span><div className="auth-div-line" /></div>
+        <div className="auth-divider">
+          <div className="auth-div-line" />
+          <span className="auth-div-txt">atau</span>
+          <div className="auth-div-line" />
+        </div>
 
-        <button className="google-btn" onClick={() => signIn('google', { callbackUrl: params.get('callbackUrl') || '/' })}>
+        <button
+          className="google-btn"
+          onClick={() =>
+            signIn('google', {
+              callbackUrl: params.get('callbackUrl') || '/',
+            })
+          }
+        >
           <svg width="18" height="18" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -65,11 +117,21 @@ export default function LoginPage() {
         <div className="auth-links">
           <span style={{ color: 'rgba(255,255,255,.38)', fontSize: '.8125rem' }}>
             Belum punya akun?{' '}
-            <Link href="/auth/register" className="auth-link" style={{ display: 'inline' }}>Daftar sekarang</Link>
+            <Link href="/auth/register" className="auth-link" style={{ display: 'inline' }}>
+              Daftar sekarang
+            </Link>
           </span>
           <Link href="/" className="auth-link">← Kembali ke Website</Link>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
